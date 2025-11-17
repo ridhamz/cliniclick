@@ -53,7 +53,7 @@ export default function DoctorPatientsPage() {
           new Set(
             appointments
               .map((apt: any) => apt.patientId)
-              .filter((id): id is string => typeof id === 'string')
+              .filter((id: unknown): id is string => typeof id === 'string')
           )
         )
         
