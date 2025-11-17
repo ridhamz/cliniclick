@@ -13,38 +13,70 @@ interface Patient {
   phone: string
 }
 
+interface Service {
+  id: string
+  name: string
+  description?: string
+  price: number
+  isActive: boolean
+}
+
 export default function NewInvoicePage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>([])
+  const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const [formData, setFormData] = useState({
     patientId: '',
+    serviceId: '',
     amount: '',
   })
 
   useEffect(() => {
     if (!session) return
 
-    const fetchPatients = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/patients')
-        if (res.ok) {
-          const data = await res.json()
-          setPatients(data)
+        const [patientsRes, servicesRes] = await Promise.all([
+          fetch('/api/patients'),
+          fetch('/api/services?isActive=true'),
+        ])
+
+        if (patientsRes.ok) {
+          const patientsData = await patientsRes.json()
+          setPatients(patientsData)
+        }
+
+        if (servicesRes.ok) {
+          const servicesData = await servicesRes.json()
+          setServices(servicesData)
         }
       } catch (error) {
-        console.error('Error fetching patients:', error)
+        console.error('Error fetching data:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchPatients()
+    fetchData()
   }, [session])
+
+  // Update amount when service is selected
+  useEffect(() => {
+    if (formData.serviceId) {
+      const selectedService = services.find(s => s.id === formData.serviceId)
+      if (selectedService) {
+        setFormData(prev => ({
+          ...prev,
+          amount: Number(selectedService.price).toFixed(2),
+        }))
+      }
+    }
+  }, [formData.serviceId, services])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,6 +168,37 @@ export default function NewInvoicePage() {
                 )}
               </div>
 
+              {/* Service (Optional) */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Service (optionnel)
+                </label>
+                {loading ? (
+                  <div className='h-10 bg-gray-100 rounded-lg animate-pulse'></div>
+                ) : (
+                  <select
+                    value={formData.serviceId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, serviceId: e.target.value })
+                    }
+                    className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent'
+                  >
+                    <option value=''>Sélectionner un service (remplit automatiquement le montant)</option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name} - {Number(service.price).toFixed(2)} TND
+                        {service.description && ` (${service.description})`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {services.length === 0 && !loading && (
+                  <p className='mt-1 text-sm text-gray-500'>
+                    Aucun service actif disponible. Le montant doit être saisi manuellement.
+                  </p>
+                )}
+              </div>
+
               {/* Amount */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -153,6 +216,11 @@ export default function NewInvoicePage() {
                   className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent'
                   placeholder='0.00'
                 />
+                {formData.serviceId && (
+                  <p className='mt-1 text-sm text-gray-500'>
+                    Montant pré-rempli depuis le service sélectionné. Vous pouvez le modifier si nécessaire.
+                  </p>
+                )}
               </div>
 
               {/* Actions */}
