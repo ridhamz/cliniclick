@@ -18,6 +18,7 @@ interface Prescription {
   id: string
   medications: string
   instructions?: string
+  pdfUrl?: string
   createdAt: string
   consultation: {
     id: string

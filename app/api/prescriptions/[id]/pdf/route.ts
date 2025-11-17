@@ -1,61 +1,8 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
-import React from 'react'
-import { renderToBuffer } from '@react-pdf/renderer'
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import PDFDocument from 'pdfkit'
 
-// Create styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 50,
-    fontSize: 12,
-    fontFamily: 'Helvetica',
-  },
-  title: {
-    fontSize: 20,
-    marginBottom: 20,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  line: {
-    borderBottom: '1px solid #000',
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    marginBottom: 8,
-    fontWeight: 'bold',
-  },
-  text: {
-    fontSize: 11,
-    marginBottom: 5,
-    marginLeft: 20,
-  },
-  signature: {
-    marginTop: 50,
-    fontSize: 10,
-  },
-  signatureLine: {
-    borderBottom: '1px solid #000',
-    width: 150,
-    marginTop: 5,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 8,
-    color: 'gray',
-  },
-})
-
-// POST generate PDF for prescription
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -67,7 +14,6 @@ export async function POST(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get prescription
     const prescription = await prisma.prescription.findUnique({
       where: { id },
       include: {
@@ -95,7 +41,6 @@ export async function POST(
       )
     }
 
-    // Verify access
     if (session.user?.role === 'PATIENT') {
       const patient = await prisma.patient.findUnique({
         where: { userId: session.user.id },
@@ -108,78 +53,150 @@ export async function POST(
       }
     }
 
-    // Prepare data
+    const doc = new PDFDocument({
+      size: 'A4',
+      margin: 50,
+    })
+    
+    const chunks: Buffer[] = []
+    doc.on('data', (chunk: Buffer) => {
+      chunks.push(chunk)
+    })
+    
+    doc.fontSize(20)
+      .text('ORDONNANCE MÉDICALE', { align: 'center' })
+    
+    doc.moveDown()
+    doc.moveTo(50, doc.y)
+      .lineTo(545, doc.y)
+      .stroke()
+    
+    doc.moveDown(2)
+    
+    doc.fontSize(12)
+      .text('Informations Patient:')
+    
+    doc.moveDown(0.5)
+      .fontSize(11)
+    
     const patientName = `${prescription.consultation?.appointment?.patient?.firstName || ''} ${prescription.consultation?.appointment?.patient?.lastName || ''}`
+    doc.text(`Nom: ${patientName}`, { indent: 20 })
+    
+    if (prescription.consultation?.appointment?.patient?.phone) {
+      doc.text(`Téléphone: ${prescription.consultation.appointment.patient.phone}`, { indent: 20 })
+    }
+    
+    doc.moveDown()
+    
+    doc.fontSize(12)
+      .text('Médecin:')
+    
+    doc.moveDown(0.5)
+      .fontSize(11)
+    
     const doctorName = prescription.consultation?.appointment?.doctor?.user?.email?.split('@')[0] || 'Médecin'
-    const specialization = prescription.consultation?.appointment?.doctor?.specialization || ''
-    const phone = prescription.consultation?.appointment?.patient?.phone || ''
+    doc.text(`Dr. ${doctorName}`, { indent: 20 })
+    
+    if (prescription.consultation?.appointment?.doctor?.specialization) {
+      doc.text(`Spécialité: ${prescription.consultation.appointment.doctor.specialization}`, { indent: 20 })
+    }
+    
     const dateStr = new Date(prescription.createdAt).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     })
-
-    // Create PDF document component
-    const PrescriptionPDF = React.createElement(
-      Document,
-      {},
-      React.createElement(
-        Page,
-        { size: 'A4', style: styles.page },
-        React.createElement(Text, { style: styles.title }, 'ORDONNANCE MÉDICALE'),
-        React.createElement(View, { style: styles.line }),
-        React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'Informations Patient:'),
-          React.createElement(Text, { style: styles.text }, `Nom: ${patientName}`),
-          phone && React.createElement(Text, { style: styles.text }, `Téléphone: ${phone}`)
-        ),
-        React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'Médecin:'),
-          React.createElement(Text, { style: styles.text }, `Dr. ${doctorName}`),
-          specialization && React.createElement(Text, { style: styles.text }, `Spécialité: ${specialization}`),
-          React.createElement(Text, { style: styles.text }, `Date: ${dateStr}`)
-        ),
-        React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'MÉDICAMENTS PRESCRITS:'),
-          React.createElement(Text, { style: styles.text }, prescription.medications || '')
-        ),
-        prescription.instructions &&
-          React.createElement(
-            View,
-            { style: styles.section },
-            React.createElement(Text, { style: styles.sectionTitle }, 'INSTRUCTIONS:'),
-            React.createElement(Text, { style: styles.text }, prescription.instructions)
-          ),
-        React.createElement(
-          View,
-          { style: styles.signature },
-          React.createElement(Text, null, 'Signature du médecin:'),
-          React.createElement(View, { style: styles.signatureLine })
-        ),
-        React.createElement(Text, { style: styles.footer }, 'Document généré par MedFlow')
-      )
-    )
-
-    // Generate PDF buffer
-    const pdfBuffer = await renderToBuffer(PrescriptionPDF)
-
-    return new NextResponse(pdfBuffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="ordonnance-${id.slice(0, 8)}.pdf"`,
-        'Content-Length': pdfBuffer.length.toString(),
-      },
+    doc.text(`Date: ${dateStr}`, { indent: 20 })
+    
+    doc.moveDown(2)
+    
+    doc.fontSize(12)
+      .text('MÉDICAMENTS PRESCRITS:')
+    
+    doc.moveDown(0.5)
+      .fontSize(11)
+    
+    const medications = prescription.medications || ''
+    doc.text(medications, {
+      indent: 20,
+      width: 495,
+      align: 'left',
     })
-  } catch (error: any) {
+    
+    if (prescription.instructions) {
+      doc.moveDown(1.5)
+        .fontSize(12)
+        .text('INSTRUCTIONS:')
+      
+      doc.moveDown(0.5)
+        .fontSize(11)
+      
+      const instructions = prescription.instructions
+      doc.text(instructions, {
+        indent: 20,
+        width: 495,
+        align: 'left',
+      })
+    }
+    
+    doc.moveDown(3)
+      .fontSize(10)
+      .text('Signature du médecin:')
+    
+    doc.moveTo(50, doc.y + 15)
+      .lineTo(200, doc.y + 15)
+      .stroke()
+    
+    const pageHeight = doc.page.height
+    const pageWidth = doc.page.width
+    doc.fontSize(8)
+      .fillColor('gray')
+      .text('Document généré par MedFlow', pageWidth / 2, pageHeight - 50, {
+        align: 'center',
+        width: pageWidth,
+      })
+    
+    doc.end()
+    
+    return new Promise<NextResponse>((resolve, reject) => {
+      doc.on('end', () => {
+        try {
+          const pdfBuffer = Buffer.concat(chunks)
+          resolve(
+            new NextResponse(pdfBuffer, {
+              headers: {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename="ordonnance-${id.slice(0, 8)}.pdf"`,
+                'Content-Length': pdfBuffer.length.toString(),
+              },
+            })
+          )
+        } catch (err) {
+          console.error('Error creating response:', err)
+          reject(
+            NextResponse.json(
+              { message: 'Error creating PDF response' },
+              { status: 500 }
+            )
+          )
+        }
+      })
+      
+      doc.on('error', (error) => {
+        console.error('PDF generation error:', error)
+        reject(
+          NextResponse.json(
+            { message: `Error generating PDF: ${error.message}` },
+            { status: 500 }
+          )
+        )
+      })
+    })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('Error generating PDF:', error)
     return NextResponse.json(
-      { message: `Error generating PDF: ${error?.message || 'Unknown error'}` },
+      { message: `Error generating PDF: ${errorMessage}` },
       { status: 500 }
     )
   }
