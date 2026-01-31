@@ -91,7 +91,7 @@ export default function RegisterPage() {
             <Stethoscope className='w-10 h-10 text-white' />
           </div>
           <h1 className='text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2'>
-            MedFlow
+            Cliniclick
           </h1>
           <p className='text-gray-600 text-sm'>
             Créez votre clinique en quelques minutes

@@ -1,4 +1,4 @@
-# Class Diagram - MedFlow
+# Class Diagram - Cliniclick
 
 ## Diagramme de Classes
 

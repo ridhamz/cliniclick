@@ -151,7 +151,7 @@ export async function POST(
     const pageWidth = doc.page.width
     doc.fontSize(8)
       .fillColor('gray')
-      .text('Document généré par MedFlow', pageWidth / 2, pageHeight - 50, {
+      .text('Document généré par Cliniclick', pageWidth / 2, pageHeight - 50, {
         align: 'center',
         width: pageWidth,
       })

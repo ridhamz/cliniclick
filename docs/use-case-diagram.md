@@ -1,4 +1,4 @@
-# Use Case Diagram - MedFlow
+# Use Case Diagram - Cliniclick
 
 ## Diagramme de Cas d'Utilisation
 

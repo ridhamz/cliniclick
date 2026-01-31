@@ -2,6 +2,45 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+
+
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+export async function analyzeAppointmentNotes(notes: string): Promise<string> {
+  try {
+    if (!notes || notes.trim() === '') {
+      return '';
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    console.log("----------------------------------------")
+    console.log(process.env.GEMINI_API_KEY)
+    const prompt = `
+En tant qu'assistant médical, analyse les notes suivantes d'un rendez-vous médical et fournis:
+1. Les raisons possibles de la maladie ou des symptômes
+2. Des recommandations générales appropriées
+
+Notes du rendez-vous: ${notes}
+
+Réponds de manière concise et professionnelle en français. Limite ta réponse à 2-3 phrases maximum.
+Important: Ce sont des recommandations générales uniquement, pas un diagnostic médical.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    return text;
+  } catch (error) {
+    console.error('Erreur lors de l\'analyse Gemini:', error);
+    return '';
+  }
+}
+
 // GET all appointments
 export async function GET(req: NextRequest) {
   try {
@@ -79,7 +118,18 @@ export async function GET(req: NextRequest) {
       orderBy: { scheduledAt: 'asc' },
     })
 
-    return NextResponse.json(appointments)
+    // Analyze notes with Gemini and add AI property
+    const appointmentsWithAI: any = appointments.map((appointment) => {
+      // If appointment already has notes, keep them
+      // Otherwise, assign random medical case
+
+    
+      return {
+        ...appointment,
+        ai: analyzeAppointmentNotes(appointment.notes || ''),
+      };
+});
+    return NextResponse.json(appointmentsWithAI)
   } catch (error) {
     console.error('Error fetching appointments:', error)
     return NextResponse.json(

@@ -1,8 +1,8 @@
-# MedFlow - SaaS pour Cliniques & Médecins
+# Cliniclick - SaaS pour Cliniques & Médecins
 
 ## Vue d'ensemble
 
-MedFlow est une application web complète de gestion de cliniques médicales construite avec **Next.js 14**, **React**, **Prisma** et **MySQL**. Elle permet aux cliniques de gérer les patients, les médecins, les rendez-vous, les consultations et les paiements.
+Cliniclick est une application web complète de gestion de cliniques médicales construite avec **Next.js 14**, **React**, **Prisma** et **MySQL**. Elle permet aux cliniques de gérer les patients, les médecins, les rendez-vous, les consultations et les paiements.
 
 ## Objectifs du projet
 

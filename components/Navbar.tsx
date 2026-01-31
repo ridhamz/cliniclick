@@ -126,7 +126,7 @@ export default function Navbar() {
                 <Stethoscope className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                MedFlow
+                Cliniclick
               </span>
             </Link>
 

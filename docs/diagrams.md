@@ -1,6 +1,6 @@
-# MedFlow - Diagrammes UML
+# Cliniclick - Diagrammes UML
 
-Ce document contient les diagrammes de cas d'utilisation et de classes pour l'application MedFlow.
+Ce document contient les diagrammes de cas d'utilisation et de classes pour l'application Cliniclick.
 
 ## Table des Matières
 
@@ -25,7 +25,7 @@ Le diagramme de cas d'utilisation montre les interactions entre les différents 
 
 ```mermaid
 graph LR
-    Admin[Admin] --> |Gestion| System[MedFlow System]
+    Admin[Admin] --> |Gestion| System[Cliniclick System]
     Doctor[Médecin] --> |Consultation| System
     Receptionist[Réceptionniste] --> |Administration| System
     Patient[Patient] --> |Portail| System

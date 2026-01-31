@@ -103,7 +103,7 @@ function LoginForm() {
             <Stethoscope className='w-10 h-10 text-white' />
           </div>
           <h1 className='text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2'>
-            MedFlow
+            Cliniclick
           </h1>
           <p className='text-gray-600 text-sm'>
             Système de gestion médicale
@@ -220,31 +220,7 @@ function LoginForm() {
           </form>
         </div>
 
-        {/* Demo Credentials */}
-        <div className='mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100'>
-          <div className='flex items-center gap-2 mb-3'>
-            <Sparkles className='w-5 h-5 text-blue-600' />
-            <p className='text-sm font-semibold text-blue-900'>Comptes de démonstration</p>
-          </div>
-          <div className='space-y-2 text-xs text-blue-800'>
-            <div className='flex items-center gap-2'>
-              <span className='font-medium'>👨‍💼 Admin:</span>
-              <span className='font-mono'>admin@medflow.tn / admin123</span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <span className='font-medium'>👨‍⚕️ Médecin:</span>
-              <span className='font-mono'>doctor@medflow.tn / doctor123</span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <span className='font-medium'>👩‍💼 Réceptionniste:</span>
-              <span className='font-mono'>receptionist@medflow.tn / receptionist123</span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <span className='font-medium'>🤖 Patient:</span>
-              <span className='font-mono'>patient@medflow.tn / patient123</span>
-            </div>
-          </div>
-        </div>
+      
 
         {/* Client JS Status (Debug) */}
         {!clientReady && (
